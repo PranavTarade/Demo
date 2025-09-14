@@ -1,1 +1,193 @@
-# Demo
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carbon Footprint Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c7a7b;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2c7a7b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #285e61;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      background: #edf2f7;
+    }
+    .tips {
+      margin-top: 1rem;
+      padding-left: 1.2rem;
+      color: #2c7a7b;
+    }
+    .tips li {
+      margin-bottom: 0.5rem;
+    }
+    canvas {
+      margin-top: 20px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Carbon Footprint Calculator</h1>
+    <form id="calcForm">
+      <label for="electricity">Electricity use (kWh/month)</label>
+      <input type="number" id="electricity" placeholder="e.g. 350">
+      <label for="car">Car travel (km/month)</label>
+      <input type="number" id="car" placeholder="e.g. 500">
+      <label for="flights">Flight hours/month</label>
+      <input type="number" id="flights" placeholder="e.g. 2">
+      <label for="meat">Meat consumption (kg/month)</label>
+      <input type="number" id="meat" placeholder="e.g. 5">
+      <button type="submit">Calculate</button>
+    </form>
+
+    <div id="result" class="hidden">
+      <p id="output"></p>
+      <canvas id="footprintChart"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const FACTORS = {
+      electricity: 0.43,
+      car: 0.21,
+      flights: 90,
+      meat: 27
+    };
+
+    document.getElementById('calcForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const electricity = parseFloat(document.getElementById('electricity').value) || 0;
+      const car = parseFloat(document.getElementById('car').value) || 0;
+      const flights = parseFloat(document.getElementById('flights').value) || 0;
+      const meat = parseFloat(document.getElementById('meat').value) || 0;
+
+      const footprint =
+        electricity * FACTORS.electricity +
+        car * FACTORS.car +
+        flights * FACTORS.flights +
+        meat * FACTORS.meat;
+
+      // Show result
+      const output = document.getElementById('output');
+      output.innerHTML = `<strong>Your estimated monthly footprint is ${footprint.toFixed(1)} kg CO₂e.</strong>`;
+
+      // Suggestions
+      let suggestions = [];
+      if (electricity > 300) {
+        suggestions.push("⚡ Switch to LED bulbs, turn off appliances when not in use, and consider renewable energy.");
+      }
+      if (car > 400) {
+        suggestions.push("🚗 Use public transport, carpool, cycle, or walk more often to cut car emissions.");
+      }
+      if (flights > 1) {
+        suggestions.push("✈️ Reduce air travel when possible, choose trains/buses, or offset flight emissions.");
+      }
+      if (meat > 8) {
+        suggestions.push("🥗 Try reducing red meat consumption and add more plant-based meals to your diet.");
+      }
+      if (suggestions.length === 0) {
+        suggestions.push("✅ Great job! Your footprint is already low. Keep up eco-friendly habits!");
+      }
+
+      const suggestionBox = document.createElement("ul");
+      suggestionBox.classList.add("tips");
+      suggestions.forEach(tip => {
+        let li = document.createElement("li");
+        li.textContent = tip;
+        suggestionBox.appendChild(li);
+      });
+
+      output.appendChild(suggestionBox);
+
+      document.getElementById('result').classList.remove('hidden');
+
+      // Chart
+      const ctx = document.getElementById('footprintChart').getContext('2d');
+      if (window.myChart) window.myChart.destroy();
+
+      let level, color, description;
+      if (footprint < 1000) {
+        level = "Good";
+        color = "green";
+        description = "Low emissions, sustainable lifestyle!";
+      } else if (footprint < 3000) {
+        level = "Moderate";
+        color = "orange";
+        description = "Consider reducing energy and travel use.";
+      } else {
+        level = "Hazardous";
+        color = "red";
+        description = "Very high emissions — serious health & climate impact.";
+      }
+
+      window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ["Good (<1000)", "Moderate (1000-3000)", "Hazardous (>3000)"],
+          datasets: [{
+            label: 'Your Footprint',
+            data: [footprint, 0, 0],
+            backgroundColor: [color, "#ddd", "#ddd"]
+          }]
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: `Your Level: ${level} → ${description}`
+            }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
